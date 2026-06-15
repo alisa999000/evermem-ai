@@ -18,8 +18,8 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/alisa999000/evermem"
-Issues = "https://github.com/alisa999000/evermem/issues"
+Homepage = "https://github.com/alisa999000/evermem-ai"
+Issues = "https://github.com/alisa999000/evermem-ai/issues"
 
 [project.scripts]
 evermem = "evermem.cli:main"
