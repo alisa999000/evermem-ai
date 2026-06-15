@@ -291,14 +291,4 @@ pytest -q          # 80 tests, no network needed
 python demo.py     # offline end-to-end scenario
 ```
 
-## Publishing (maintainers)
-
-```bash
-python -m pip install --upgrade build twine
-python -m build
-python -m twine upload dist/*
-# Username: __token__
-# Password: your PyPI API token (pypi-AgE...)
-```
-
 MIT License.
