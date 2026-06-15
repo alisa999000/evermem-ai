@@ -68,12 +68,19 @@ class OllamaLLM:
                     if not line:
                         continue
                     data = json.loads(line)
+                    if data.get("error"):
+                        raise LLMUnavailable(str(data["error"]))
                     chunk = str(data.get("message", {}).get("content", ""))
                     if chunk:
                         yield chunk
                     if data.get("done"):
                         break
-        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")[:500]
+            raise LLMUnavailable(
+                f"LLM stream to {self.base_url}/api/chat failed: HTTP {exc.code} {detail}"
+            ) from exc
+        except (urllib.error.URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:
             raise LLMUnavailable(f"LLM stream to {self.base_url}/api/chat failed: {exc}") from exc
 
 

@@ -1,20 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Brain, Sparkles } from "lucide-react";
-import { fetchProfile, sendFeedback, streamChat, uploadFile } from "./api";
+import { ChevronDownIcon, CircleStackIcon } from "@heroicons/react/24/outline";
+import { fetchProfile, sendChat, sendFeedback, streamChat, uploadFile } from "./api";
 import { ChatInput } from "./components/ChatInput";
 import { ChatMessage } from "./components/ChatMessage";
 import { MemoryPanel } from "./components/MemoryPanel";
 import { Sidebar } from "./components/Sidebar";
+import { Switch } from "./components/Switch";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { useTheme } from "./hooks/useTheme";
 import { useThreads } from "./hooks/useThreads";
 import type { Claim, Message, Source } from "./types";
-
-const SUGGESTIONS = [
-  "Запомни: меня зовут Алекс, я backend-разработчик",
-  "Где я работаю и чем занимаюсь?",
-  "Что ты знаешь обо мне из прошлых сообщений?",
-];
 
 function titleFromMessage(text: string) {
   const t = text.trim().slice(0, 48);
@@ -39,6 +34,9 @@ export default function App() {
   const [claimsLoading, setClaimsLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [useLlm, setUseLlm] = useState(true);
+  const [showScrollBtn, setShowScrollBtn] = useState(false);
+
+  const mainRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -57,13 +55,24 @@ export default function App() {
     refreshClaims();
   }, [refreshClaims, activeId]);
 
+  const scrollToBottom = useCallback((smooth = true) => {
+    bottomRef.current?.scrollIntoView({ behavior: smooth ? "smooth" : "auto" });
+  }, []);
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeThread.messages, busy]);
+    scrollToBottom();
+  }, [activeThread.messages, busy, scrollToBottom]);
 
   useEffect(() => {
     return () => abortRef.current?.abort();
   }, []);
+
+  const onMainScroll = () => {
+    const el = mainRef.current;
+    if (!el) return;
+    const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollBtn(dist > 120);
+  };
 
   const appendMessage = (msg: Message) => {
     updateActive((t) => ({
@@ -73,10 +82,7 @@ export default function App() {
     }));
   };
 
-  const patchAssistant = (
-    assistantId: string,
-    patch: Partial<Message>,
-  ) => {
+  const patchAssistant = (assistantId: string, patch: Partial<Message>) => {
     updateActive((t) => ({
       ...t,
       updatedAt: Date.now(),
@@ -111,32 +117,46 @@ export default function App() {
     let content = "";
 
     try {
-      await streamChat(
-        text,
-        activeId,
-        useLlm,
-        (event) => {
-          if (event.type === "meta") {
-            sources = event.sources;
-            queryProfile = event.query_profile;
-          } else if (event.type === "token") {
-            content += event.content;
-            patchAssistant(assistantId, { content, streaming: true, sources, queryProfile });
-          } else if (event.type === "error") {
-            content += `\n\n⚠ ${event.message}`;
-            patchAssistant(assistantId, { content, streaming: true });
-          } else if (event.type === "done") {
-            const final = event.answer || content || "(пустой ответ)";
-            patchAssistant(assistantId, {
-              content: final,
-              streaming: false,
-              sources,
-              queryProfile,
-            });
-          }
-        },
-        controller.signal,
-      );
+      try {
+        await streamChat(
+          text,
+          activeId,
+          useLlm,
+          (event) => {
+            if (event.type === "meta") {
+              sources = event.sources;
+              queryProfile = event.query_profile;
+            } else if (event.type === "token") {
+              content += event.content;
+              patchAssistant(assistantId, { content, streaming: true, sources, queryProfile });
+            } else if (event.type === "error") {
+              content += `\n\n⚠ ${event.message}`;
+              patchAssistant(assistantId, { content, streaming: true });
+            } else if (event.type === "done") {
+              const final = event.answer || content || "(пустой ответ)";
+              patchAssistant(assistantId, {
+                content: final,
+                streaming: false,
+                sources,
+                queryProfile,
+              });
+            }
+          },
+          controller.signal,
+        );
+      } catch {
+        const res = await sendChat(text, activeId, useLlm);
+        sources = res.sources ?? [];
+        queryProfile = res.query_profile;
+        let answer = res.answer || res.memory_prompt || "(пустой ответ)";
+        if (res.llm_error) answer += `\n\n⚠ ${res.llm_error}`;
+        patchAssistant(assistantId, {
+          content: answer,
+          streaming: false,
+          sources,
+          queryProfile,
+        });
+      }
       await refreshClaims();
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
@@ -179,7 +199,7 @@ export default function App() {
   const empty = activeThread.messages.length === 0;
 
   return (
-    <div className="h-full flex bg-em-bg dark:bg-em-d-bg transition-colors">
+    <div className="h-full flex bg-em-bg dark:bg-em-d-bg">
       <Sidebar
         threads={threads}
         activeId={activeId}
@@ -191,74 +211,37 @@ export default function App() {
       />
 
       <div className="flex-1 flex flex-col min-w-0 relative">
-        <header className="h-14 flex items-center justify-between px-4 border-b border-em-border dark:border-em-d-border bg-em-bg/80 dark:bg-em-d-bg/80 backdrop-blur shrink-0">
-          <div className="flex items-center gap-2 text-sm text-em-muted dark:text-em-d-muted">
-            <Sparkles size={16} className="text-em-accent" />
-            <span className="hidden sm:inline">Чат с памятью</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="flex items-center gap-2 text-xs text-em-muted dark:text-em-d-muted cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={useLlm}
-                onChange={(e) => setUseLlm(e.target.checked)}
-                className="rounded border-gray-300 dark:border-gray-600 text-em-accent focus:ring-em-accent"
-              />
-              LLM
-            </label>
+        <header className="absolute top-0 inset-x-0 z-10 h-12 flex items-center justify-end px-3 gap-0.5 pointer-events-none">
+          <div className="flex items-center gap-0.5 pointer-events-auto">
+            <Switch checked={useLlm} onChange={setUseLlm} label="LLM" />
             <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <button
               type="button"
               onClick={() => setMemoryOpen(true)}
-              className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg border border-em-border dark:border-em-d-border bg-white dark:bg-em-d-card hover:bg-gray-50 dark:hover:bg-em-d-hover dark:text-em-d-text"
+              className="btn-icon relative"
+              title="Память"
             >
-              <Brain size={16} />
-              <span className="hidden sm:inline">Память</span>
+              <CircleStackIcon className="w-5 h-5" strokeWidth={1.5} />
               {claims.length > 0 && (
-                <span className="text-xs bg-em-accent/10 text-em-accent px-1.5 rounded-full">
-                  {claims.length}
-                </span>
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-em-accent" />
               )}
             </button>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">
+        <main
+          ref={mainRef}
+          onScroll={onMainScroll}
+          className="flex-1 min-h-0 overflow-y-auto pt-12"
+        >
           {empty ? (
-            <div className="max-w-2xl mx-auto px-4 flex flex-col items-center justify-center min-h-full py-12">
-              <div className="mb-8 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-em-accent text-white text-xl font-semibold mb-4">
-                  e
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-semibold text-em-text dark:text-em-d-text tracking-tight">
-                  evermem
-                </h1>
-                <p className="text-em-muted dark:text-em-d-muted mt-2 text-sm">
-                  Local-first память для ваших диалогов
-                </p>
-              </div>
-              <ChatInput
-                disabled={busy}
-                variant="hero"
-                onSend={handleSend}
-                onUpload={handleUpload}
-              />
-              <div className="grid sm:grid-cols-2 gap-2 w-full mt-6">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    disabled={busy}
-                    onClick={() => handleSend(s)}
-                    className="text-left text-sm p-3 rounded-xl border border-em-border dark:border-em-d-border bg-white/80 dark:bg-em-d-card hover:border-em-accent/30 hover:bg-white dark:hover:bg-em-d-hover transition-all dark:text-em-d-text"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+            <div className="h-full flex items-center justify-center pb-28">
+              <h2 className="text-2xl font-normal text-em-text dark:text-em-d-text">
+                Чем могу помочь?
+              </h2>
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto px-4 py-8">
+            <div className="chat-shell py-6">
               {activeThread.messages.map((m) => (
                 <ChatMessage
                   key={m.id}
@@ -270,14 +253,30 @@ export default function App() {
                   }
                 />
               ))}
-              <div ref={bottomRef} />
+              <div ref={bottomRef} className="h-4" />
             </div>
           )}
         </main>
 
-        {!empty && (
-          <ChatInput disabled={busy} onSend={handleSend} onUpload={handleUpload} />
+        {showScrollBtn && !empty && (
+          <button
+            type="button"
+            onClick={() => scrollToBottom()}
+            className="absolute bottom-28 left-1/2 -translate-x-1/2 z-10 w-8 h-8 rounded-full bg-white dark:bg-em-d-card border border-em-border dark:border-white/10 shadow-md flex items-center justify-center text-em-muted dark:text-em-d-muted hover:bg-gray-50 dark:hover:bg-white/10 transition-all"
+            title="Вниз"
+          >
+            <ChevronDownIcon className="w-4 h-4" strokeWidth={2} />
+          </button>
         )}
+
+        <footer className="shrink-0 bg-gradient-to-t from-em-bg via-em-bg dark:from-em-d-bg dark:via-em-d-bg to-transparent pt-2">
+          <ChatInput
+            disabled={busy}
+            autoFocus={empty}
+            onSend={handleSend}
+            onUpload={handleUpload}
+          />
+        </footer>
 
         <MemoryPanel
           open={memoryOpen}

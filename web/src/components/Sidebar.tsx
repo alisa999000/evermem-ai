@@ -1,4 +1,8 @@
-import { MessageSquarePlus, PanelLeftClose, PanelLeft, Trash2 } from "lucide-react";
+import {
+  Bars3Icon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import type { Thread } from "../types";
 
 type Props = {
@@ -22,79 +26,80 @@ export function Sidebar({
 }: Props) {
   return (
     <aside
-      className={`${
-        collapsed ? "w-0 md:w-14" : "w-64"
-      } shrink-0 border-r border-em-border dark:border-em-d-border bg-em-sidebar dark:bg-em-d-sidebar flex flex-col transition-all duration-200 overflow-hidden`}
+      className={`
+        shrink-0 bg-em-sidebar dark:bg-em-d-sidebar flex flex-col overflow-hidden
+        transition-[width] duration-200
+        ${collapsed ? "w-14" : "w-[260px]"}
+      `}
     >
-      <div className="h-14 flex items-center justify-between px-3 border-b border-em-border dark:border-em-d-border shrink-0">
-        {!collapsed && (
-          <span className="font-semibold text-sm tracking-tight pl-1 dark:text-em-d-text">
-            evermem
-          </span>
+      <div
+        className={`p-2 shrink-0 flex gap-1 ${collapsed ? "flex-col items-center" : "flex-row items-center"}`}
+      >
+        {collapsed ? (
+          <>
+            <button type="button" onClick={onToggle} className="btn-icon" title="Показать меню">
+              <Bars3Icon className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+            <button type="button" onClick={onNew} className="btn-icon" title="Новый чат">
+              <PlusIcon className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={onNew}
+              className="flex-1 flex items-center gap-2.5 rounded-lg text-sm px-3 py-2.5
+                hover:bg-black/[0.05] dark:hover:bg-white/[0.06]
+                transition-colors dark:text-em-d-text"
+            >
+              <PlusIcon className="w-5 h-5 shrink-0" strokeWidth={1.5} />
+              <span>Новый чат</span>
+            </button>
+            <button type="button" onClick={onToggle} className="btn-icon shrink-0" title="Скрыть">
+              <Bars3Icon className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+          </>
         )}
-        <button
-          type="button"
-          onClick={onToggle}
-          className="p-2 rounded-lg hover:bg-gray-200/60 dark:hover:bg-em-d-hover text-em-muted dark:text-em-d-muted"
-          title={collapsed ? "Показать меню" : "Скрыть меню"}
-        >
-          {collapsed ? <PanelLeft size={18} /> : <PanelLeftClose size={18} />}
-        </button>
-      </div>
-
-      <div className="p-2 shrink-0">
-        <button
-          type="button"
-          onClick={onNew}
-          className={`w-full flex items-center gap-2 rounded-xl border border-em-border dark:border-em-d-border bg-white dark:bg-em-d-card hover:bg-gray-50 dark:hover:bg-em-d-hover text-sm font-medium transition-colors dark:text-em-d-text ${
-            collapsed ? "justify-center p-2.5" : "px-3 py-2.5"
-          }`}
-        >
-          <MessageSquarePlus size={18} />
-          {!collapsed && <span>Новый чат</span>}
-        </button>
       </div>
 
       {!collapsed && (
-        <nav className="flex-1 overflow-y-auto px-2 pb-4">
-          <p className="text-[11px] uppercase tracking-wider text-em-muted dark:text-em-d-muted px-2 py-2">
-            Недавние
+        <nav className="flex-1 overflow-y-auto px-2 pb-3">
+          <p className="text-[11px] font-medium text-em-muted/70 dark:text-em-d-muted/70 px-3 py-2">
+            Чаты
           </p>
           <ul className="space-y-0.5">
-            {threads.map((t) => (
-              <li key={t.id} className="group flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => onSelect(t.id)}
-                  className={`flex-1 text-left text-sm truncate rounded-lg px-3 py-2 transition-colors ${
-                    t.id === activeId
-                      ? "bg-gray-200/70 dark:bg-em-d-hover text-em-text dark:text-em-d-text"
-                      : "hover:bg-gray-100 dark:hover:bg-em-d-hover text-em-muted dark:text-em-d-muted"
-                  }`}
-                >
-                  {t.title}
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(t.id);
-                  }}
-                  className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-em-d-hover text-em-muted dark:text-em-d-muted shrink-0"
-                  title="Удалить"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </li>
-            ))}
+            {threads.map((t) => {
+              const active = t.id === activeId;
+              return (
+                <li key={t.id} className="group flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => onSelect(t.id)}
+                    className={`
+                      flex-1 text-left text-sm truncate rounded-lg px-3 py-2
+                      transition-colors duration-150
+                      ${active
+                        ? "bg-black/[0.06] dark:bg-white/[0.08] text-em-text dark:text-em-d-text"
+                        : "text-em-muted dark:text-em-d-muted hover:bg-black/[0.04] dark:hover:bg-white/[0.05]"
+                      }
+                    `}
+                  >
+                    {t.title}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDelete(t.id)}
+                    className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:text-red-500 text-em-muted transition-all"
+                    title="Удалить"
+                  >
+                    <TrashIcon className="w-4 h-4" strokeWidth={1.5} />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </nav>
-      )}
-
-      {!collapsed && (
-        <div className="p-3 border-t border-em-border dark:border-em-d-border text-[11px] text-em-muted dark:text-em-d-muted shrink-0">
-          Local-first memory · on-prem
-        </div>
       )}
     </aside>
   );

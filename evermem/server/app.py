@@ -69,7 +69,7 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
     app = FastAPI(
         title="evermem Server",
         description="Local-first memory layer with web chat",
-        version="0.4.0",
+        version="0.4.1",
         lifespan=lifespan,
     )
 
@@ -122,18 +122,21 @@ def create_app(config: ServerConfig | None = None) -> FastAPI:
         sid = _session_id(body.session_id)
 
         def generate():
-            yield f"data: {json.dumps({'type': 'session', 'session_id': sid})}\n\n"
-            for event in service.chat_stream(
-                body.message,
-                session_id=sid,
-                use_llm=body.use_llm,
-            ):
-                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+            try:
+                yield f"data: {json.dumps({'type': 'session', 'session_id': sid})}\n\n"
+                for event in service.chat_stream(
+                    body.message,
+                    session_id=sid,
+                    use_llm=body.use_llm,
+                ):
+                    yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+            except Exception as exc:
+                yield f"data: {json.dumps({'type': 'error', 'message': str(exc)}, ensure_ascii=False)}\n\n"
             yield "data: [DONE]\n\n"
 
         return StreamingResponse(
             generate(),
-            media_type="text/event-stream",
+            media_type="text/event-stream; charset=utf-8",
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",

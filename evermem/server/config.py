@@ -22,7 +22,8 @@ class ServerConfig:
 
     @classmethod
     def from_env(cls) -> ServerConfig:
-        db = os.environ.get("EVERMEM_DB", "/data/memory.db")
+        default_db = Path.home() / ".evermem" / "memory.db"
+        db = os.environ.get("EVERMEM_DB", str(default_db))
         static = os.environ.get(
             "EVERMEM_STATIC_DIR",
             str(Path(__file__).resolve().parent / "static"),
@@ -33,8 +34,8 @@ class ServerConfig:
             port=int(os.environ.get("EVERMEM_PORT", "8080")),
             chat_model=os.environ.get("EVERMEM_CHAT_MODEL", "qwen2.5:7b"),
             extract_model=os.environ.get("EVERMEM_EXTRACT_MODEL", ""),
-            embed_model=os.environ.get("EVERMEM_EMBED_MODEL", "nomic-embed-text"),
-            ollama_url=os.environ.get("EVERMEM_OLLAMA_URL", "http://127.0.0.1:11434"),
+            embed_model=os.environ.get("EVERMEM_EMBED_MODEL", ""),
+            ollama_url=os.environ.get("EVERMEM_OLLAMA_URL", "http://localhost:11434"),
             default_user=os.environ.get("EVERMEM_USER", "default"),
             api_key=os.environ.get("EVERMEM_API_KEY", "").strip(),
             static_dir=Path(static),

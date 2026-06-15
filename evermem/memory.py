@@ -14,6 +14,7 @@ import datetime as _dt
 import time
 from pathlib import Path
 
+from .corrections import extract_rule_purchase_claims, prepare_observe_drafts
 from .extractor import LLMExtractor, RuleExtractor
 from .plasticity import PathPlasticity
 from .counters import extract_countable_claims, summarize_entity_counts
@@ -100,6 +101,7 @@ class EverMem:
             result = self.extractor.extract(text, speaker="user")
             topic = result.topic
             all_drafts.extend(result.claims)
+            all_drafts.extend(extract_rule_purchase_claims(text, speaker="user"))
             all_drafts.extend(extract_countable_claims(text, speaker="user"))
         elif role == "assistant":
             from .extractor import ExtractionResult
@@ -130,6 +132,15 @@ class EverMem:
                 events_added += 1
             except ValueError:
                 continue
+
+        all_drafts = prepare_observe_drafts(
+            text,
+            role,
+            all_drafts,
+            store=self.store,
+            user_id=uid,
+            now=happened_at,
+        )
 
         for draft in all_drafts:
             try:

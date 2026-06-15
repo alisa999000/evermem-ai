@@ -1,4 +1,4 @@
-import { Moon, Sun } from "lucide-react";
+import { MoonIcon, SunIcon } from "@heroicons/react/24/outline";
 import type { Theme } from "../hooks/useTheme";
 
 type Props = {
@@ -11,10 +11,14 @@ export function ThemeToggle({ theme, onToggle }: Props) {
     <button
       type="button"
       onClick={onToggle}
-      className="p-2 rounded-lg border border-em-border dark:border-em-d-border bg-white dark:bg-em-d-card hover:bg-gray-50 dark:hover:bg-em-d-hover text-em-muted dark:text-em-d-muted transition-colors"
+      className="btn-icon"
       title={theme === "dark" ? "Светлая тема" : "Тёмная тема"}
     >
-      {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+      {theme === "dark" ? (
+        <SunIcon className="w-[18px] h-[18px]" strokeWidth={1.5} />
+      ) : (
+        <MoonIcon className="w-[18px] h-[18px]" strokeWidth={1.5} />
+      )}
     </button>
   );
 }

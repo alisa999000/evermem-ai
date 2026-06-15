@@ -2,71 +2,105 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
-  height: 100%;
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-em-bg text-em-text dark:bg-em-d-bg dark:text-em-d-text antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::selection {
+    @apply bg-em-accent/20;
+  }
 }
 
-body {
-  @apply bg-em-bg text-em-text dark:bg-em-d-bg dark:text-em-d-text transition-colors duration-200;
+@layer components {
+  .btn-icon {
+    @apply inline-flex items-center justify-center rounded-full p-2
+      text-em-muted dark:text-em-d-muted
+      transition-colors duration-150
+      hover:bg-black/[0.06] dark:hover:bg-white/[0.08]
+      hover:text-em-text dark:hover:text-em-d-text
+      disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  /* Центрированная колонка как в ChatGPT — широкая, но с разумным max */
+  .chat-shell {
+    @apply w-full max-w-3xl mx-auto px-4;
+  }
+
+  .input-pill {
+    @apply flex items-end gap-1 rounded-[1.625rem]
+      bg-white dark:bg-em-d-card
+      border border-em-border/80 dark:border-white/[0.08]
+      shadow-sm dark:shadow-none
+      px-2 py-2
+      focus-within:border-em-accent/30 dark:focus-within:border-white/[0.12];
+  }
 }
 
 ::-webkit-scrollbar {
   width: 6px;
-  height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  @apply bg-black/10 dark:bg-white/10 rounded-full;
 }
 
 .markdown-body p {
-  @apply mb-3 last:mb-0 leading-relaxed;
+  @apply mb-4 last:mb-0 leading-[1.75];
 }
 .markdown-body ul,
 .markdown-body ol {
-  @apply mb-3 pl-5 list-disc;
+  @apply mb-4 pl-6 list-disc space-y-1.5;
+}
+.markdown-body li {
+  @apply leading-[1.75];
+}
+.markdown-body strong {
+  @apply font-semibold;
 }
 .markdown-body code {
-  @apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
+  @apply bg-black/[0.06] dark:bg-white/[0.08] px-1.5 py-0.5 rounded-md text-[0.9em];
 }
 .markdown-body pre {
-  @apply bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto mb-3 text-sm;
+  @apply bg-black/[0.04] dark:bg-white/[0.06] p-4 rounded-xl overflow-x-auto mb-4 text-sm;
+}
+.markdown-body pre code {
+  @apply bg-transparent p-0;
+}
+.markdown-body a {
+  @apply text-em-accent hover:underline underline-offset-2;
 }
 
-@keyframes pulse-dot {
-  0%,
-  80%,
-  100% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  40% {
-    opacity: 1;
-    transform: scale(1);
-  }
+.stream-cursor::after {
+  content: "▋";
+  @apply text-em-d-text ml-0.5;
+  animation: blink-cursor 1s step-end infinite;
 }
+
 .loading-dot {
   animation: pulse-dot 1.4s infinite ease-in-out both;
 }
-.loading-dot:nth-child(1) {
-  animation-delay: -0.32s;
+.loading-dot:nth-child(1) { animation-delay: -0.32s; }
+.loading-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes pulse-dot {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
 }
-.loading-dot:nth-child(2) {
-  animation-delay: -0.16s;
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-@keyframes blink-cursor {
-  0%,
-  100% {
-    opacity: 1;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
-  50% {
-    opacity: 0;
-  }
-}
-.stream-cursor::after {
-  content: "▋";
-  @apply text-em-accent ml-0.5;
-  animation: blink-cursor 1s step-end infinite;
 }

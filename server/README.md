@@ -34,12 +34,12 @@ docker compose exec ollama ollama pull nomic-embed-text
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| EVERMEM_DB | /data/memory.db | SQLite path |
+| EVERMEM_DB | ~/.evermem/memory.db | SQLite path |
 | EVERMEM_PORT | 8080 | HTTP port |
 | EVERMEM_CHAT_MODEL | qwen2.5:7b | Ollama model for answers |
 | EVERMEM_EXTRACT_MODEL | (same as chat) | Extraction at ingest |
-| EVERMEM_EMBED_MODEL | nomic-embed-text | Embeddings (empty = hash) |
-| EVERMEM_OLLAMA_URL | http://127.0.0.1:11434 | Ollama base URL |
+| EVERMEM_EMBED_MODEL | (empty) | Ollama embeddings; empty = built-in hash |
+| EVERMEM_OLLAMA_URL | http://localhost:11434 | Ollama base URL |
 | EVERMEM_API_KEY | (empty) | Optional Bearer / X-API-Key |
 
 ## API

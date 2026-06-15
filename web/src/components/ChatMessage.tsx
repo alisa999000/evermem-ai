@@ -1,15 +1,21 @@
+import { useState, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
-import { Copy, ThumbsDown, ThumbsUp } from "lucide-react";
+import {
+  CheckIcon,
+  ClipboardDocumentIcon,
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+} from "@heroicons/react/24/outline";
 import { SourcesBlock } from "./SourcesBlock";
 import type { Message } from "../types";
 
 function LoadingDots() {
   return (
-    <div className="flex gap-1 py-2">
+    <div className="flex gap-1 py-4">
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="loading-dot w-2 h-2 rounded-full bg-em-muted dark:bg-em-d-muted"
+          className="loading-dot w-1.5 h-1.5 rounded-full bg-em-muted/50 dark:bg-em-d-muted/50"
         />
       ))}
     </div>
@@ -22,10 +28,18 @@ type Props = {
 };
 
 export function ChatMessage({ message, onFeedback }: Props) {
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    await navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (message.role === "user") {
     return (
       <div className="flex justify-end mb-6">
-        <div className="max-w-[85%] bg-em-user dark:bg-em-d-user rounded-2xl px-4 py-3 text-[15px] leading-relaxed">
+        <div className="max-w-[85%] rounded-[1.25rem] bg-em-user dark:bg-em-d-user px-4 py-3 text-[15px] leading-relaxed dark:text-em-d-text">
           {message.content}
         </div>
       </div>
@@ -34,8 +48,8 @@ export function ChatMessage({ message, onFeedback }: Props) {
 
   if (message.role === "system") {
     return (
-      <div className="text-center text-xs text-em-muted dark:text-em-d-muted mb-4">
-        {message.content}
+      <div className="flex justify-center mb-4">
+        <span className="text-xs text-em-muted dark:text-em-d-muted">{message.content}</span>
       </div>
     );
   }
@@ -43,58 +57,73 @@ export function ChatMessage({ message, onFeedback }: Props) {
   const showCursor = message.streaming && message.content;
 
   return (
-    <div className="mb-8 group">
-      <div className="flex items-start gap-3">
-        <div className="w-7 h-7 rounded-full bg-em-accent text-white flex items-center justify-center text-xs font-semibold shrink-0 mt-0.5">
-          e
-        </div>
-        <div className="flex-1 min-w-0">
-          <div
-            className={`markdown-body text-[15px] text-em-text dark:text-em-d-text ${
-              showCursor ? "stream-cursor" : ""
-            }`}
-          >
-            {message.content ? (
-              <ReactMarkdown>{message.content}</ReactMarkdown>
-            ) : (
-              <LoadingDots />
-            )}
-          </div>
-
-          {message.sources && message.sources.length > 0 && !message.streaming && (
-            <SourcesBlock sources={message.sources} queryProfile={message.queryProfile} />
-          )}
-
-          {message.content && onFeedback && !message.streaming && (
-            <div className="flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                type="button"
-                onClick={() => onFeedback(true)}
-                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-em-d-hover text-em-muted dark:text-em-d-muted"
-                title="Полезно"
-              >
-                <ThumbsUp size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => onFeedback(false)}
-                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-em-d-hover text-em-muted dark:text-em-d-muted"
-                title="Не полезно"
-              >
-                <ThumbsDown size={16} />
-              </button>
-              <button
-                type="button"
-                onClick={() => navigator.clipboard.writeText(message.content)}
-                className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-em-d-hover text-em-muted dark:text-em-d-muted"
-                title="Копировать"
-              >
-                <Copy size={16} />
-              </button>
-            </div>
-          )}
-        </div>
+    <div className="mb-8">
+      <div
+        className={`markdown-body text-[15px] dark:text-em-d-text ${
+          showCursor ? "stream-cursor" : ""
+        }`}
+      >
+        {message.content ? (
+          <ReactMarkdown>{message.content}</ReactMarkdown>
+        ) : (
+          <LoadingDots />
+        )}
       </div>
+
+      {!message.streaming && message.content && (
+        <div className="flex flex-wrap items-center gap-1 mt-3 -ml-1">
+          <ActionBtn
+            onClick={copy}
+            title={copied ? "Скопировано" : "Копировать"}
+            icon={
+              copied ? (
+                <CheckIcon className="w-4 h-4" strokeWidth={2} />
+              ) : (
+                <ClipboardDocumentIcon className="w-4 h-4" strokeWidth={1.5} />
+              )
+            }
+          />
+          {onFeedback && (
+            <>
+              <ActionBtn
+                onClick={() => onFeedback(true)}
+                title="Полезно"
+                icon={<HandThumbUpIcon className="w-4 h-4" strokeWidth={1.5} />}
+              />
+              <ActionBtn
+                onClick={() => onFeedback(false)}
+                title="Не полезно"
+                icon={<HandThumbDownIcon className="w-4 h-4" strokeWidth={1.5} />}
+              />
+            </>
+          )}
+        </div>
+      )}
+
+      {message.sources && message.sources.length > 0 && !message.streaming && (
+        <SourcesBlock sources={message.sources} queryProfile={message.queryProfile} />
+      )}
     </div>
+  );
+}
+
+function ActionBtn({
+  onClick,
+  title,
+  icon,
+}: {
+  onClick: () => void;
+  title: string;
+  icon: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      className="btn-icon !p-2 text-em-muted dark:text-em-d-muted"
+    >
+      {icon}
+    </button>
   );
 }

@@ -175,6 +175,10 @@ class MemoryService:
             "claims_added": report.claims_added,
         }
 
+    def _observe_user(self, message: str, *, session_id: str) -> None:
+        with self._lock:
+            self._mem.observe(message, session_id=session_id, role="user")
+
     def _recall(self, message: str, *, session_id: str) -> tuple[MemoryPack, str, list[dict]]:
         with self._lock:
             pack = self._mem.recall(message, session_id=session_id)
@@ -189,6 +193,7 @@ class MemoryService:
         session_id: str,
         use_llm: bool = True,
     ) -> dict:
+        self._observe_user(message, session_id=session_id)
         pack, memory_prompt, sources = self._recall(message, session_id=session_id)
         answer = ""
         llm_error = ""
@@ -209,7 +214,6 @@ class MemoryService:
 
         if answer and use_llm and self.config.chat_model and not llm_error:
             with self._lock:
-                self._mem.observe(message, session_id=session_id, role="user")
                 self._mem.observe(answer, session_id=session_id, role="assistant")
 
         return {
@@ -227,6 +231,7 @@ class MemoryService:
         session_id: str,
         use_llm: bool = True,
     ) -> Iterator[dict]:
+        self._observe_user(message, session_id=session_id)
         pack, memory_prompt, sources = self._recall(message, session_id=session_id)
         yield {
             "type": "meta",
@@ -263,7 +268,6 @@ class MemoryService:
         answer = "".join(answer_parts).strip()
         if answer and use_llm and self.config.chat_model and not llm_error:
             with self._lock:
-                self._mem.observe(message, session_id=session_id, role="user")
                 self._mem.observe(answer, session_id=session_id, role="assistant")
 
         yield {

@@ -32,7 +32,8 @@ Return STRICT JSON only, no prose, in this schema:
 Rules:
 - "subject": who/what the claim is about. Use "user" for the speaker.
 - "predicate": short snake_case relation (name, age, location, job, likes, dislikes, has_pet, favorite_language, ...).
-- "exclusive": true when a new value REPLACES the old one (name, age, location, job); false when values accumulate (likes, skills, events).
+- "exclusive": true when a new value REPLACES the old one (name, age, location, job, purchase counts, quantities); false when values accumulate (likes, skills, separate events).
+- For purchases ("bought N items"): predicate has_bought, exclusive=true. A correction ("9 not 10") replaces the previous count.
 - Only durable facts worth remembering for weeks. Skip greetings, questions, chit-chat.
 - Emit kind=event for countable items (projects led, kits, trips, doctor visits, pickups).
 - Emit kind=preference for hobbies, interests, skill level, tools and formats.
