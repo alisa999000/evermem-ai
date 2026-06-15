@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-em-bg text-em-text dark:bg-em-d-bg dark:text-em-d-text transition-colors duration-200;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+.markdown-body p {
+  @apply mb-3 last:mb-0 leading-relaxed;
+}
+.markdown-body ul,
+.markdown-body ol {
+  @apply mb-3 pl-5 list-disc;
+}
+.markdown-body code {
+  @apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm;
+}
+.markdown-body pre {
+  @apply bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto mb-3 text-sm;
+}
+
+@keyframes pulse-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.loading-dot {
+  animation: pulse-dot 1.4s infinite ease-in-out both;
+}
+.loading-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.loading-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes blink-cursor {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+.stream-cursor::after {
+  content: "▋";
+  @apply text-em-accent ml-0.5;
+  animation: blink-cursor 1s step-end infinite;
+}

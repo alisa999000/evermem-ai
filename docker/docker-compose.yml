@@ -1,0 +1,28 @@
+services:
+  evermem:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      EVERMEM_DB: /data/memory.db
+      EVERMEM_OLLAMA_URL: http://ollama:11434
+      EVERMEM_CHAT_MODEL: qwen2.5:7b
+      EVERMEM_EMBED_MODEL: nomic-embed-text
+      EVERMEM_EXTRACT_MODEL: qwen2.5:7b
+    volumes:
+      - evermem_data:/data
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
+volumes:
+  evermem_data:
+  ollama_data:

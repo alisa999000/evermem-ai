@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.db
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# benchmark datasets (15-265 MB, download via bench/README.md)
+bench/data/
+
+# local benchmark runs (final numbers live in README.md)
+bench/report_*.json
+bench/*.log
