@@ -1,6 +1,13 @@
 # evermem
 
-**Local-first eternal memory for any LLM.** Conflict-aware facts, temporal validity windows, trust scoring, and retrieval that learns from feedback. Pure Python stdlib - zero dependencies, SQLite under the hood, your data never leaves your machine.
+[![PyPI](https://img.shields.io/pypi/v/evermem-ai)](https://pypi.org/project/evermem-ai/)
+[![Python](https://img.shields.io/pypi/pyversions/evermem-ai)](https://pypi.org/project/evermem-ai/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub](https://img.shields.io/github/stars/alisa999000/evermem-ai?style=social)](https://github.com/alisa999000/evermem-ai)
+
+**Local-first eternal memory for any LLM.** Conflict-aware facts, temporal validity windows, trust scoring, and retrieval that learns from feedback. Pure Python stdlib, zero dependencies in the core, SQLite under the hood, your data never leaves your machine.
+
+**Install:** `pip install evermem-ai` | **Repo:** [github.com/alisa999000/evermem-ai](https://github.com/alisa999000/evermem-ai) | **PyPI:** [pypi.org/project/evermem-ai](https://pypi.org/project/evermem-ai/)
 
 LLMs forget everything between sessions. Cloud memory services fix that by shipping your users' most personal data to someone else's API, and still get the hard parts wrong: they return facts that were contradicted weeks ago, add seconds of network latency to every turn, and break the moment you are offline. **evermem** runs entirely on your hardware and models memory as a *lifecycle*, not a pile of vectors:
 
@@ -85,13 +92,15 @@ Add `--model qwen2.5:7b` to any command for LLM-powered fact extraction via Olla
 
 ## evermem Server (on-prem product)
 
-Web chat + REST API for clients who will not `pip install` (med centers, law firms, integrators).
+Web chat with streaming, memory sources, dark theme, PDF upload, and REST API for clients who will not integrate via Python (med centers, law firms, integrators).
 
 ```bash
 pip install "evermem-ai[server,pdf]"
 ollama pull qwen2.5:7b && ollama pull nomic-embed-text
 evermem-server   # http://127.0.0.1:8080
 ```
+
+API: `/api/chat`, `/api/chat/stream` (SSE), `/api/remember`, `/api/upload`, `/api/profile`, `/api/feedback`.
 
 Docker (server + Ollama): see [server/README.md](server/README.md) and `docker/docker-compose.yml`.
 
@@ -165,7 +174,7 @@ print(EverMemRetriever(mem, session_id="app").invoke("when do we ship?"))
 
 ```
 observe(text)
-  └─ extractor (LLM or rules) ──> claims (subject, predicate, value, exclusive)
+  └─ extractor (LLM or rules) -> claims (subject, predicate, value, exclusive)
        └─ ClaimStore (SQLite)
             ├─ same value        -> reinforce: support+1, trust ↑
             ├─ exclusive change  -> supersede: validity window closes, history kept
@@ -277,9 +286,19 @@ Full runbook: [`bench/README.md`](bench/README.md).
 ## Development
 
 ```bash
-pip install -e .[dev]
-pytest -q          # 78 tests, no network needed
+pip install -e ".[dev]"
+pytest -q          # 80 tests, no network needed
 python demo.py     # offline end-to-end scenario
+```
+
+## Publishing (maintainers)
+
+```bash
+python -m pip install --upgrade build twine
+python -m build
+python -m twine upload dist/*
+# Username: __token__
+# Password: your PyPI API token (pypi-AgE...)
 ```
 
 MIT License.
