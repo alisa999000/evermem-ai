@@ -90,9 +90,9 @@ evermem mcp              # run the MCP server
 
 Add `--model qwen2.5:7b` to any command for LLM-powered fact extraction via Ollama, and `--embed-model nomic-embed-text` for better recall.
 
-## evermem Server (on-prem product)
+## evermem Server (on-prem chat)
 
-Web chat with streaming, memory sources, dark theme, PDF upload, and REST API for clients who will not integrate via Python (med centers, law firms, integrators).
+Web chat with streaming, memory sources, dark theme, PDF upload, and REST API. Runs fully on your hardware.
 
 ```bash
 pip install "evermem-ai[server,pdf]"
@@ -278,10 +278,10 @@ Full runbook: [`bench/README.md`](bench/README.md).
 - [x] Preferences: boosted in recall for recommend/suggest questions
 - [x] Episode summarization (rule fallback; LLM when Ollama configured)
 - [x] LangChain / LlamaIndex adapters (`pip install "evermem-ai[langchain]"`)
-- [x] Sprint 4: memory events, assistant extract, query router (0.3.0)
+- [x] Memory events, assistant-turn extraction, query router (0.3.0)
 - [x] **evermem Server**: FastAPI + web UI + upload + Docker (0.4.0)
-- [ ] Control measurement: raw full history vs MemoryPack (context compression chart)
-- [ ] Encrypted memory sync between devices (first paid feature; core stays MIT forever)
+- [ ] Context compression benchmark: raw history vs MemoryPack
+- [ ] Encrypted sync between devices (planned)
 
 ## Development
 
